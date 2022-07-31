@@ -7,11 +7,11 @@ const validateUser = (req, res, next) => {
     next();
   }
   const authHeader = req.headers.authorization;
-  if (!authHeader) handleUserNotFound();
+  if (!authHeader) return handleUserNotFound();
   const token = authHeader?.split(" ")[1];
-  if (!token) handleUserNotFound();
+  if (!token) return handleUserNotFound();
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) handleUserNotFound();
+    if (err) return handleUserNotFound();
     req.user = decoded;
     next();
   });

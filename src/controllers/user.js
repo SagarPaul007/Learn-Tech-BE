@@ -6,6 +6,9 @@ const { JWT_SECRET } = require("../config/env");
 const getUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).lean();
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
     res.json({
       success: true,
       user: {
