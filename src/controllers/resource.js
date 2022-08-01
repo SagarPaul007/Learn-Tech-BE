@@ -20,11 +20,14 @@ const addResource = async (req, res) => {
     });
     await Promise.all(
       tags.map(async (tag) => {
-        const tagExists = await Tags.findOne({ name: tag });
+        const tagExists = await Tags.findOne({ name: tag, parentTag });
         if (tagExists) {
-          await Tags.findOneAndUpdate({ name: tag }, { $inc: { count: 1 } });
+          await Tags.findOneAndUpdate(
+            { name: tag, parentTag },
+            { $inc: { count: 1 } }
+          );
         } else {
-          await Tags.create({ name: tag, count: 1 });
+          await Tags.create({ name: tag, parentTag, count: 1 });
         }
       })
     );
@@ -71,17 +74,23 @@ const editResource = async (req, res) => {
     const addedTags = tags.filter((tag) => !resource.tags.includes(tag));
     await Promise.all(
       removedTags.map(async (tag) => {
-        const tagExists = await Tags.findOne({ name: tag });
+        const tagExists = await Tags.findOne({ name: tag, parentTag });
         if (tagExists) {
-          await Tags.findOneAndUpdate({ name: tag }, { $inc: { count: -1 } });
+          await Tags.findOneAndUpdate(
+            { name: tag, parentTag },
+            { $inc: { count: -1 } }
+          );
         }
       }),
       addedTags.map(async (tag) => {
-        const tagExists = await Tags.findOne({ name: tag });
+        const tagExists = await Tags.findOne({ name: tag, parentTag });
         if (tagExists) {
-          await Tags.findOneAndUpdate({ name: tag }, { $inc: { count: 1 } });
+          await Tags.findOneAndUpdate(
+            { name: tag, parentTag },
+            { $inc: { count: 1 } }
+          );
         } else {
-          await Tags.create({ name: tag, count: 1 });
+          await Tags.create({ name: tag, parentTag, count: 1 });
         }
       })
     );
