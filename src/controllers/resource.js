@@ -100,7 +100,32 @@ const editResource = async (req, res) => {
   }
 };
 
+const getResources = async (req, res) => {
+  try {
+    const { parentTag, tags, page } = req.body;
+    const size = 20;
+    const resources = await Resource.find({
+      ...(parentTag && parentTag !== "all" ? { parentTag } : {}),
+      ...(tags && tags.length && { tags: { $in: tags } }),
+    })
+      .sort({ _id: -1 })
+      .skip((page - 1) * size)
+      .limit(size)
+      .lean();
+    const canFetchMore = resources.length === size;
+    res.json({
+      success: true,
+      resources,
+      canFetchMore,
+      nextPage: canFetchMore ? page + 1 : null,
+    });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   addResource,
   editResource,
+  getResources,
 };

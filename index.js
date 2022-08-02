@@ -4,6 +4,7 @@ const cors = require("cors");
 const { DB_URI, PORT } = require("./src/config/env");
 const userRoutes = require("./src/routes/user.routes");
 const resourceRoutes = require("./src/routes/resource.routes");
+const tagsRoutes = require("./src/routes/tags.routes");
 const { validateUser } = require("./src/middlewares/user");
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(validateUser);
 // routes
 app.use("/users", userRoutes);
 app.use("/resources", resourceRoutes);
+app.use("/tags", tagsRoutes);
 
 // connect to mongodb
 mongoose
