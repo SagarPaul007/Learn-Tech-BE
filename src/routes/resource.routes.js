@@ -5,5 +5,6 @@ const resourceController = require("../controllers/resource");
 router.post("/add", validateAddResourceInput, resourceController.addResource);
 router.post("/edit", resourceController.editResource);
 router.post("/getResources", resourceController.getResources);
+router.post("/likeUnlike", resourceController.likeUnlike);
 
 module.exports = router;

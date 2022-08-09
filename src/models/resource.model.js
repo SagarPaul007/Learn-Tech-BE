@@ -30,6 +30,16 @@ const resourceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    like: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+    },
+    comments: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Comment",
+      default: [],
+    },
   },
   { timestamps: true, versionKey: false }
 );

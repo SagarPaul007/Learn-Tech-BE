@@ -111,6 +111,7 @@ const getResources = async (req, res) => {
       .sort({ _id: -1 })
       .skip((page - 1) * size)
       .limit(size)
+      .populate("addedBy")
       .lean();
     const canFetchMore = resources.length === size;
     res.json({
@@ -124,8 +125,37 @@ const getResources = async (req, res) => {
   }
 };
 
+const likeUnlike = async (req, res) => {
+  try {
+    const { id } = req.user;
+    if (!id)
+      return res.json({ success: false, message: "Please log in first!" });
+    const user = await User.findById(id);
+    if (!user)
+      return res.json({ success: false, message: "Please log in first!" });
+    const { resourceId, action } = req.body;
+    if (!resourceId)
+      return res.json({ success: false, message: "Resource not found" });
+    const resource = await Resource.findById(resourceId);
+    if (!resource)
+      return res.json({ success: false, message: "Resource not found" });
+    if (resource.like?.includes(user._id)) {
+      resource.like = resource.like.filter((x) => x !== user._id) || [];
+    } else if (resource.like) {
+      resource.like.push(user._id);
+    } else {
+      resource.like = [user._id];
+    }
+    await resource.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   addResource,
   editResource,
   getResources,
+  likeUnlike,
 };

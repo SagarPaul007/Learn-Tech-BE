@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
     resources: {
       type: [mongoose.Schema.Types.ObjectId], // These are bookmarked resources
       ref: "Resource",
+      default: [],
     },
   },
   { timestamps: true, versionKey: false }
