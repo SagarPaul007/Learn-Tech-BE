@@ -8,27 +8,31 @@ const addResource = async (req, res) => {
     if (!id) return res.json({ success: false, message: "User not found" });
     const user = await User.findById(id);
     if (!user) return res.json({ success: false, message: "User not found" });
-    const { title, description, url, parentTag, tags, thumbnail } = req.body;
+    const { title, description, url, categories, tags, thumbnail } = req.body;
     await Resource.create({
       title,
       description,
       url,
-      parentTag,
+      categories,
       tags,
       thumbnail,
       addedBy: user._id,
     });
     await Promise.all(
-      tags.map(async (tag) => {
-        const tagExists = await Tags.findOne({ name: tag, parentTag });
-        if (tagExists) {
-          await Tags.findOneAndUpdate(
-            { name: tag, parentTag },
-            { $inc: { count: 1 } }
-          );
-        } else {
-          await Tags.create({ name: tag, parentTag, count: 1 });
-        }
+      categories.map(async (category) => {
+        await Promise.all(
+          tags.map(async (tag) => {
+            const tagExists = await Tags.findOne({ name: tag, category });
+            if (tagExists) {
+              await Tags.findOneAndUpdate(
+                { name: tag, category },
+                { $inc: { count: 1 } }
+              );
+            } else {
+              await Tags.create({ name: tag, category, count: 1 });
+            }
+          })
+        );
       })
     );
     res.json({ success: true, message: "Resource added successfully" });
@@ -55,12 +59,12 @@ const editResource = async (req, res) => {
         message: "You are not authorized to edit this resource",
       });
     }
-    const { title, description, url, parentTag, tags, thumbnail } = req.body;
+    const { title, description, url, categories, tags, thumbnail } = req.body;
     const updateData = {
       ...(title && { title }),
       ...(description && { description }),
       ...(url && { url }),
-      ...(parentTag && { parentTag }),
+      ...(categories && { categories }),
       ...(tags && { tags }),
       ...(thumbnail && { thumbnail }),
     };
@@ -73,25 +77,29 @@ const editResource = async (req, res) => {
     const removedTags = resource.tags.filter((tag) => !tags.includes(tag));
     const addedTags = tags.filter((tag) => !resource.tags.includes(tag));
     await Promise.all(
-      removedTags.map(async (tag) => {
-        const tagExists = await Tags.findOne({ name: tag, parentTag });
-        if (tagExists) {
-          await Tags.findOneAndUpdate(
-            { name: tag, parentTag },
-            { $inc: { count: -1 } }
-          );
-        }
-      }),
-      addedTags.map(async (tag) => {
-        const tagExists = await Tags.findOne({ name: tag, parentTag });
-        if (tagExists) {
-          await Tags.findOneAndUpdate(
-            { name: tag, parentTag },
-            { $inc: { count: 1 } }
-          );
-        } else {
-          await Tags.create({ name: tag, parentTag, count: 1 });
-        }
+      categories.map(async (category) => {
+        await Promise.all(
+          removedTags.map(async (tag) => {
+            const tagExists = await Tags.findOne({ name: tag, category });
+            if (tagExists) {
+              await Tags.findOneAndUpdate(
+                { name: tag, category },
+                { $inc: { count: -1 } }
+              );
+            }
+          }),
+          addedTags.map(async (tag) => {
+            const tagExists = await Tags.findOne({ name: tag, category });
+            if (tagExists) {
+              await Tags.findOneAndUpdate(
+                { name: tag, category },
+                { $inc: { count: 1 } }
+              );
+            } else {
+              await Tags.create({ name: tag, category, count: 1 });
+            }
+          })
+        );
       })
     );
     res.json({ success: true, message: "Resource updated successfully" });
@@ -102,10 +110,12 @@ const editResource = async (req, res) => {
 
 const getResources = async (req, res) => {
   try {
-    const { parentTag, tags, page } = req.body;
+    const { category, tags, page } = req.body;
     const size = 20;
     const resources = await Resource.find({
-      ...(parentTag && parentTag !== "all" ? { parentTag } : {}),
+      ...(category && category !== "all"
+        ? { categories: { $in: [category] } }
+        : {}),
       ...(tags && tags.length && { tags: { $in: tags } }),
     })
       .sort({ _id: -1 })
@@ -133,20 +143,51 @@ const likeUnlike = async (req, res) => {
     const user = await User.findById(id);
     if (!user)
       return res.json({ success: false, message: "Please log in first!" });
-    const { resourceId, action } = req.body;
+    const { resourceId } = req.body;
     if (!resourceId)
       return res.json({ success: false, message: "Resource not found" });
     const resource = await Resource.findById(resourceId);
     if (!resource)
       return res.json({ success: false, message: "Resource not found" });
-    if (resource.like?.includes(user._id)) {
-      resource.like = resource.like.filter((x) => x !== user._id) || [];
-    } else if (resource.like) {
-      resource.like.push(user._id);
+    if (resource.likes?.includes(user._id)) {
+      resource.likes =
+        resource.likes.filter((x) => x.toString() !== user._id.toString()) ||
+        [];
+    } else if (resource.likes) {
+      resource.likes.push(user._id);
     } else {
-      resource.like = [user._id];
+      resource.likes = [user._id];
     }
     await resource.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
+
+const bookmark = async (req, res) => {
+  try {
+    const { id } = req.user;
+    if (!id)
+      return res.json({ success: false, message: "Please log in first!" });
+    const user = await User.findById(id);
+    if (!user)
+      return res.json({ success: false, message: "Please log in first!" });
+    const { resourceId } = req.body;
+    if (!resourceId)
+      return res.json({ success: false, message: "Resource not found" });
+    const resource = await Resource.findById(resourceId);
+    if (!resource)
+      return res.json({ success: false, message: "Resource not found" });
+    if (user.resources?.includes(resource._id)) {
+      user.resources =
+        user.resources.filter(
+          (x) => x.toString() !== resource._id.toString()
+        ) || [];
+    } else {
+      user.resources.push(resource._id);
+    }
+    await user.save();
     res.json({ success: true });
   } catch (err) {
     res.json({ success: false, message: err.message });
@@ -158,4 +199,5 @@ module.exports = {
   editResource,
   getResources,
   likeUnlike,
+  bookmark,
 };

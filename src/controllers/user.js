@@ -15,7 +15,25 @@ const getUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        resources: user.resources,
       },
+    });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
+
+const getResources = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate({ path: "resources", populate: "addedBy" })
+      .lean();
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+    res.json({
+      success: true,
+      resources: user.resources,
     });
   } catch (err) {
     res.json({ success: false, message: err.message });
@@ -65,4 +83,5 @@ module.exports = {
   getUser,
   registerUser,
   loginUser,
+  getResources,
 };

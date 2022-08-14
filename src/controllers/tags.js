@@ -2,14 +2,11 @@ const Tags = require("../models/tags.model");
 
 const getTags = async (req, res) => {
   try {
-    let parentTag = req.params.parentTag;
-    if (!parentTag || parentTag === "all") {
-      parentTag = "";
-    }
+    let category = req.params.category;
     const tags = await Tags.aggregate([
       {
         $match: {
-          ...(parentTag ? { parentTag } : {}),
+          ...(category ? { category } : {}),
         },
       },
       {

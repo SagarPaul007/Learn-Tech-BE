@@ -29,8 +29,8 @@ const validateLoginInput = (req, res, next) => {
 };
 
 const validateAddResourceInput = (req, res, next) => {
-  const { title, url, description, parentTag } = req.body;
-  if (!title || !url || !description || !parentTag) {
+  const { title, url, description, categories } = req.body;
+  if (!title || !url || !description || !categories?.length) {
     return res.json({ success: false, message: "Please enter all fields" });
   }
   next();

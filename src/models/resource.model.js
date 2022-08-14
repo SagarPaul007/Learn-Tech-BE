@@ -14,8 +14,9 @@ const resourceSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    parentTag: {
-      type: String,
+    categories: {
+      type: [String],
+      default: ["programming"],
       required: true,
       // "programming", "web development", "mobile development", "data science", "machine learning", "artificial intelligence", "blockchain", "game development", "web design", "other"
     },
@@ -30,7 +31,7 @@ const resourceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    like: {
+    likes: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: "User",
       default: [],

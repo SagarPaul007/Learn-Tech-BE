@@ -7,9 +7,10 @@ const tagsSchema = new Schema(
       type: String,
       required: true,
     },
-    parentTag: {
+    category: {
       type: String,
       required: true,
+      default: "programming",
       // "programming", "web development", "mobile development", "data science", "machine learning", "artificial intelligence", "blockchain", "game development", "web design", "other"
     },
     count: {
