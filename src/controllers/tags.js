@@ -16,6 +16,9 @@ const getTags = async (req, res) => {
           name: { $first: "$name" },
         },
       },
+      {
+        $sort: { count: -1 },
+      },
     ]);
     res.json({ success: true, tags });
   } catch (err) {

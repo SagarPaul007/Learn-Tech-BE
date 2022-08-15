@@ -111,14 +111,14 @@ const editResource = async (req, res) => {
 const getResources = async (req, res) => {
   try {
     const { category, tags, page } = req.body;
-    const size = 20;
+    const size = 12;
     const resources = await Resource.find({
       ...(category && category !== "all"
         ? { categories: { $in: [category] } }
         : {}),
       ...(tags && tags.length && { tags: { $in: tags } }),
     })
-      .sort({ _id: -1 })
+      .sort({ _id: 1 })
       .skip((page - 1) * size)
       .limit(size)
       .populate("addedBy")
