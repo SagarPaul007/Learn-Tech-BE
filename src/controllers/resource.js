@@ -1,6 +1,7 @@
 const Resource = require("../models/resource.model");
 const User = require("../models/user.model");
 const Tags = require("../models/tags.model");
+const Comment = require("../models/comment.model");
 
 const addResource = async (req, res) => {
   try {
@@ -9,6 +10,10 @@ const addResource = async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.json({ success: false, message: "User not found" });
     const { title, description, url, categories, tags, thumbnail } = req.body;
+    const exists = await Resource.findOne({ $or: [{ title }, { url }] });
+    if (exists) {
+      return res.json({ success: false, message: "Resource already exists" });
+    }
     await Resource.create({
       title,
       description,
@@ -194,10 +199,58 @@ const bookmark = async (req, res) => {
   }
 };
 
+const getResource = async (req, res) => {
+  const { resourceId } = req.params;
+  if (!resourceId)
+    return res.json({ success: false, message: "Resource not found" });
+  const resource = await Resource.findById(resourceId)
+    .populate({
+      path: "comments",
+      populate: "by",
+      options: { sort: { _id: -1 } },
+    })
+    .lean();
+  if (!resource)
+    return res.json({ success: false, message: "Resource not found" });
+  res.json({ success: true, resource });
+};
+
+const addComment = async (req, res) => {
+  try {
+    const { comment, resourceId } = req.body;
+    const { id } = req.user;
+    if (!id) {
+      return res.json({ success: false, message: "Please log in first!" });
+    }
+    const user = await User.findById(id);
+    if (!user) {
+      return res.json({ success: false, message: "Please log in first!" });
+    }
+    if (!resourceId) {
+      return res.json({ success: false, message: "Resource not found." });
+    }
+    const resource = await Resource.findById(resourceId);
+    if (!resource) {
+      return res.json({ success: false, message: "Resource not found." });
+    }
+    const addedComment = await Comment.create({
+      content: comment,
+      by: user._id,
+    });
+    resource.comments.push(addedComment._id);
+    await resource.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   addResource,
   editResource,
   getResources,
   likeUnlike,
   bookmark,
+  getResource,
+  addComment,
 };

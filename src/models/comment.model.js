@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
-const commentSchema = new Schema(
+const commentSchema = new mongoose.Schema(
   {
     content: {
       type: String,
@@ -9,12 +8,11 @@ const commentSchema = new Schema(
       trim: true,
     },
     by: {
-      type: mongoose.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
   },
-  { timestamps: false, versionKey: false }
+  { timestamps: true, versionKey: false }
 );
 
-const Comment = mongoose.model("Comment", commentSchema);
-module.exports = Comment;
+module.exports = mongoose.model("Comment", commentSchema);

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+require("./comment.model");
 
 const resourceSchema = new mongoose.Schema(
   {

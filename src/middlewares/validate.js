@@ -36,8 +36,17 @@ const validateAddResourceInput = (req, res, next) => {
   next();
 };
 
+const validateAddCommentInput = (req, res, next) => {
+  const { comment } = req.body;
+  if (!comment) {
+    return res.json({ success: false, message: "Please type a comment" });
+  }
+  next();
+};
+
 module.exports = {
   validateRegisterInput,
   validateLoginInput,
   validateAddResourceInput,
+  validateAddCommentInput,
 };
